@@ -11,7 +11,7 @@ from app.routers import cez_ai, jazz_ai
 app = FastAPI()
 
 app.include_router(cez_ai.router, prefix="/api/cez/ai")
-app.include_router(cez_ai.router, prefix="/api/jazz/ai")
+app.include_router(jazz_ai.router, prefix="/api/jazz/ai")
 
 origins = [
   "http://localhost",
