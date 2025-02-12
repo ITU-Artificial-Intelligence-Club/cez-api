@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
-from subprocess import Popen, PIPE
 from sys import stderr
-from app.cez_ai.libs.move_lib import Move
+
+import asyncio
 
 router = APIRouter()
 
@@ -11,11 +11,18 @@ def pos_notation_to_dict(pos):
     'row': int(pos[1]) - 1
   }
 
+timeout = 5.0
+
+async def ask_jazz(process, command):
+  process.stdin.write(command)
+  process.stdin.flush()
+
+  return asyncio.wait_for(process.stdout.readline(), timeout)
+
 @router.post("/calculate")
 async def calculate(request: Request):
   data = await request.json()
 
-  print(data)
   fen = data["fen"]
 
   # difficulty is one of 1, 2 or 3
@@ -33,23 +40,28 @@ async def calculate(request: Request):
 
   aidepth = 256
 
-  with Popen(
-      ('jazzinsea', '-d%'),
-      stdin=PIPE,
-      stdout=PIPE,
-      stderr=stderr,
-      text=True) as process:
+  try:
+    process = await asyncio.create_subprocess_exec(
+      'jazzinsea',
+      '-d%',
+      stdin=asyncio.subprocess.PIPE,
+      stdout=asyncio.subprocess.PIPE,
+      stderr=stderr)
 
-    process.stdin.write(f'aitime {aitime}\n')
-    process.stdin.write(f'aidepth {aidepth}\n')
-    process.stdin.write(f'loadfen "{fen}"\n')
-    process.stdin.write(f'evaluate -r\n')
-    process.stdin.flush()
-    move_str = process.stdout.readline()[:-1]
+    process.stdin.write(f'aitime {aitime}\n'.encode())
+    process.stdin.write(f'aidepth {aidepth}\n'.encode())
+    process.stdin.write(f'loadfen "{fen}"\n'.encode())
 
-    process.stdin.write(f'descmove {move_str}\n')
-    process.stdin.flush()
-    describe_str = process.stdout.readline()[:-1]
+    process.stdin.write(f'evaluate -r\n'.encode())
+    # process.stdin.flush()
+    print("here1")
+    move_str = (await asyncio.wait_for(process.stdout.readline(), timeout)).decode()
+    print(f"here2 {move_str}")
+
+    process.stdin.write(f'descmove {move_str}\n'.encode())
+    # process.stdin.flush()
+    describe_str = (await asyncio.wait_for(process.stdout.readline(), timeout)).decode()
+
     from_pos, to_pos, capture_pos = describe_str.split()
 
     move = {
@@ -62,3 +74,6 @@ async def calculate(request: Request):
       move["capture"] = pos_notation_to_dict(capture_pos)
 
     return move
+
+  finally:
+    process.kill()
