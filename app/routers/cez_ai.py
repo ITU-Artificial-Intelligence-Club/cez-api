@@ -10,10 +10,15 @@ router = APIRouter()
 @router.post("/calculate")
 async def calculate(request: Request):
   data = await request.json()
-  fen = data.get("fen")
-  depth = data.get("depth")
-  if not depth:
-    depth = 4
+  
+  print(data)
+  fen = data["fen"]
+
+  # difficulty is one of 1, 2 or 3
+  difficulty = 1
+  if "difficulty" in data:
+    difficulty = min(max(int(data["difficulty"]), 1), 3)
+
   game = game_lib.Game()
 
   try:
@@ -22,10 +27,11 @@ async def calculate(request: Request):
     print(f"could not load fen")
     return
 
-  depth = max(1, min(6, depth))
-  ai = ai_lib.AI(depth)
+  aidepth = difficulty + 3
+
+  ai = ai_lib.AI(aidepth)
   
-  print(f"Calculating with depth {depth}...")
+  print(f"Calculating with depth {aidepth}...")
 
   best_lines, best_score = ai.calculate_best_move(game.board)
   move = random.choice(best_lines)[-1]
