@@ -54,6 +54,13 @@ async def calculate(request: Request):
     process.stdin.write(f'aidepth {aidepth}\n'.encode())
     process.stdin.write(f'loadfen "{fen}"\n'.encode())
 
+    process.stdin.write(f'status -i\n'.encode())
+    # process.stdin.flush()
+    status = (await asyncio.wait_for(process.stdout.readline(), timeout)).decode()
+
+    if status != '0':
+      return None
+
     process.stdin.write(f'evaluate -r\n'.encode())
     # process.stdin.flush()
     move_str = (await asyncio.wait_for(process.stdout.readline(), timeout)).decode()
