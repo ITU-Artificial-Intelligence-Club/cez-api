@@ -56,9 +56,7 @@ async def calculate(request: Request):
 
     process.stdin.write(f'evaluate -r\n'.encode())
     # process.stdin.flush()
-    print("here1")
     move_str = (await asyncio.wait_for(process.stdout.readline(), timeout)).decode()
-    print(f"here2 {move_str}")
 
     process.stdin.write(f'descmove {move_str}\n'.encode())
     # process.stdin.flush()
