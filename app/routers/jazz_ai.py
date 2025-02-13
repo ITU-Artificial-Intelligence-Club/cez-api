@@ -13,6 +13,8 @@ def pos_notation_to_dict(pos):
 
 timeout = 5.0
 
+JIS_PATH = './bin/jazzinsea'
+
 async def ask_jazz(process, command):
   process.stdin.write(command)
   process.stdin.flush()
@@ -42,7 +44,7 @@ async def calculate(request: Request):
 
   try:
     process = await asyncio.create_subprocess_exec(
-      'jazzinsea',
+      JIS_PATH,
       '-d%',
       stdin=asyncio.subprocess.PIPE,
       stdout=asyncio.subprocess.PIPE,
