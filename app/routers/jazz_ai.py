@@ -56,18 +56,18 @@ async def calculate(request: Request):
 
     process.stdin.write(f'status -i\n'.encode())
     # process.stdin.flush()
-    status = (await asyncio.wait_for(process.stdout.readline(), timeout)).decode()
+    status = (await asyncio.wait_for(process.stdout.readline(), timeout)).decode()[:-1]
 
     if status != '0':
       return None
 
     process.stdin.write(f'evaluate -r\n'.encode())
     # process.stdin.flush()
-    move_str = (await asyncio.wait_for(process.stdout.readline(), timeout)).decode()
+    move_str = (await asyncio.wait_for(process.stdout.readline(), timeout)).decode()[:-1]
 
     process.stdin.write(f'descmove {move_str}\n'.encode())
     # process.stdin.flush()
-    describe_str = (await asyncio.wait_for(process.stdout.readline(), timeout)).decode()
+    describe_str = (await asyncio.wait_for(process.stdout.readline(), timeout)).decode()[:-1]
 
     from_pos, to_pos, capture_pos = describe_str.split()
 
